@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alura: Imersão Back-End</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="/styles.css">
+</head>
+
+<body>
+    <!-- Container principal -->
+    <div class="container-principal">
+        <h1>Alura: Imersão Back-End</h1>
+        <h2>API Node.js com Google Gemini</h2>
+        <h3>Aluno: Paulo Sérgio Ferreira de Sousa</h3>
+
+        <div class="redesocial">
+            <h4>Redes Sociais:</h4>
+            <ul>
+                <li>
+                    <a href="https://www.linkedin.com/in/sérgio-sousa-948447133" target="_blank" aria-label="Visite meu perfil no LinkedIn">
+                        <i class="fab fa-linkedin"></i> LinkedIn: https://www.linkedin.com/in/sérgio-sousa-948447133
+                    </a>
+                </li>
+                <li>
+                    <a href="https://github.com/sergio-ceara/" target="_blank" aria-label="Visite meu GitHub">
+                        <i class="fab fa-github"></i> GitHub: https://github.com/sergio-ceara/
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Container secundário -->
+    <div class="container-secundario">
+        <h1>Funções da API</h1>
+        <!-- Moldura de bancos e collections-->
+        <div class="moldura">
+            <div class="orientacao">
+                <p><strong>Ação: </strong>Lista bancos e collections</p>
+                <p><strong>Método: </strong> GET <strong>Requisição: </strong>http://localhost:3000/clusters</p>
+                <h3>Estrutura:</h3>
+                <pre></pre>
+            </div>
+        </div>
+
+        <!-- Moldura de Listar posts-->
+        <div class="moldura">
+            <div class="orientacao">
+                <p><strong>Ação: </strong>Lista posts</p>
+                <p><strong>Método: </strong> GET <strong>Requisição: </strong>http://localhost:3000/posts</p>
+                <h3>Estrutura:</h3>
+                <pre></pre>
+            </div>
+        </div>
+
+        <!-- Moldura de Incluir -->
+        <div class="moldura">
+            <div class="orientacao">
+                <p><strong>Ação: </strong>Incluir</p>
+                <p><strong>Método: </strong> POST <strong>Requisição: </strong>http://localhost:3000/posts</p>
+                <h3>Estrutura:</h3>
+                <pre>Body: form-data: [imagem:file] (obrigatório), 
+                 [descricao:text] (opcional), 
+                 [alt:text] (opcional)
+{
+       "imagem": <strong>"nome da imagem e extensão"</strong>,
+    "descricao": <strong>"digitação ou gerada pelo Gemini"</strong>,
+          "alt": <strong>"digitação ou gerada pelo Gemini"</strong>
+}</pre>
+            </div>
+        </div>
+
+        <!-- Moldura de Alterar -->
+        <div class="moldura">
+            <div class="orientacao">
+                <p><strong>Ação: </strong>Alterar</p>
+                <p><strong>Método: </strong> PUT <strong>Requisição: </strong>http://localhost:3000/posts/:id</p>
+                <h3>Estrutura:</h3>
+                <pre>Body: form-data: [imagem:file] (obrigatório), 
+                 [descricao:text] (opcional), 
+                 [alt:text] (opcional),
+                 [imagemAnterior:text] (obrigatório)
+{
+          "imagem": <strong>"nome da imagem e extensão"</strong>,
+       "descricao": <strong>"digitação ou gerada pelo Gemini"</strong>,
+             "alt": <strong>"digitação ou gerada pelo Gemini"</strong>,
+  "imagemAnterior": <strong>"id da imagem e extensão"</strong>,     
+}</pre>
+            </div>
+        </div>
+
+        <!-- Moldura de Excluir todos -->
+        <div class="moldura">
+            <div class="orientacao">
+                <p><strong>Ação: </strong>Excluir todos os posts</p>
+                <p><strong>Método: </strong> DELETE <strong>Requisição: </strong>http://localhost:3000/posts</p>
+                <h3>Estrutura:</h3>
+                <pre>
+                </pre>
+            </div>
+        </div>
+        <!-- Moldura de Excluir todos -->
+        <div class="moldura">
+            <div class="orientacao">
+                <p><strong>Ação: </strong>Excluir post</p>
+                <p><strong>Método: </strong> DELETE <strong>Requisição: </strong>http://localhost:3000/post/:id</p>
+                <h3>Estrutura:</h3>
+                <pre>
+                </pre>
+            </div>
+        </div>
+    </div>
+    
+</body>
+</html>
