@@ -32,38 +32,68 @@ export async function listarPost(req, res) {
 }
 
 // Função auxiliar para construir o objeto do post com imagem e descrição.
-async function objetoPost(req) {
+async function objetoPost(req, id) {
     // definindo variáveis a serem usadas nesta função
-    let descricao, alt, imgBuffer = "";
+    let descricao, alt, imgBuffer, imagem, imagemAnterior, postAnterior, arquivoImagem, extensao = null;
+    // identificando a informações antes da alteração
+    if (id) {
+       postAnterior = await getPost(id); 
+    }
     // Verifica se a imagem foi enviada, caso contrário retorna uma falha.
     if (req.file) {
-        // Lê a imagem enviada.
-        imgBuffer = fs.readFileSync(req.file.path); 
+		imgBuffer = fs.readFileSync(req.file.path);
+		//imgBuffer = fs.promises.readFile(req.file.path);
+		imagem = req.file.originalname;
+        if (postAnterior) {
+           imagemAnterior = postAnterior.imagem;
+        }
+        //if (imgBuffer == null || imgBuffer == "") {
+		if (!imgBuffer) {
+           //return { "falha": "Imagem é obrigatória." }; 
+        }
     } else {
-        // Se não houver imagem, retorna erro.
-        return { "falha": "Imagem é obrigatória." }; 
+		console.log("postAnterior:", postAnterior);
+        if (postAnterior) {
+           imagem = postAnterior.imagem;
+        }
+		if (!req.body.descricao && !req.body.alt) {
+			extensao = path.extname(postAnterior.imagem).slice(1);
+			arquivoImagem = `uploads/${postAnterior._id}.${extensao}`;
+			imgBuffer = fs.readFileSync(arquivoImagem);
+		}
+		
     }
     // Se a descrição não for fornecida, gera uma descrição automática com Gemini.
-    if (!req.body.descricao) {
-        descricao = await gerarDescricaoComGemini(imgBuffer, "Crie uma descrição resumida desta imagem, sem introdução, formatação ou quebra de linha.");
+	
+    if (!req.body.descricao && imgBuffer) {
+        try {
+            descricao = await gerarDescricaoComGemini(imgBuffer, "Crie uma descrição resumida desta imagem, sem introdução, formatação ou quebra de linha.");
+        } catch (e) {
+            console.log("Google Gemini: descrição automática: ",e.message);
+            descricao = "Descrição automática falhou. Tente novamente."
+        }
+        
     } else {
         // Usa a descrição fornecida no corpo da requisição.
         descricao = req.body.descricao; 
     }
 
     // Se o texto alternativo (alt) não for fornecido, gera um automaticamente.
-    if (!req.body.alt) {
+    if (!req.body.alt && imgBuffer) {
         alt = await gerarDescricaoComGemini(imgBuffer, "Crie uma descrição detalhada desta imagem, sem introdução, formatação ou quebra de linha.");
     } else {
         // Usa o texto alternativo fornecido no corpo da requisição.
         alt = req.body.alt; 
     }
+    // teste
+    // console.log("objetoPost: imagemAnterior:",imagemAnterior);
 
     // Retorna o objeto com as informações do post.
     return {
-        "imagem": req.file.originalname,
+        "imagem": imagem,
         "descricao": descricao,
-        "alt": alt
+        "alt": alt,
+        ...(imagemAnterior ? {"imagemAnterior": imagemAnterior} : {})
     };
 }
 
@@ -77,7 +107,12 @@ export async function novoPost(req, res) {
     }
     try {
         // Obtém a extensão da imagem e renomeia o arquivo para salvar no servidor.
-        const extensao = path.extname(req.file.originalname).slice(1);
+		// console.log("novoPost: 1", novoPost);
+		let extensao = ""
+		if (req.file) {
+			extensao = path.extname(req.file.originalname).slice(1);
+		}
+		// console.log("novoPost: 2", novoPost);
         // Cria o post no banco de dados.
         const postCriado = await criarPost(novoPost); 
         // Atualiza o caminho da imagem no servidor.
@@ -102,12 +137,14 @@ export async function alterarPost(req, res) {
     if (!id) {
         return res.status(400).json({ "alterarPost: error": "ID é obrigatório." });
     }
-    // Verifica se a imagem anterior foi fornecida, caso contrário retorna erro.
-    if (!req.body.imagemAnterior) {
-        return res.status(400).json({ "alterarPost: error": "Imagem anterior é obrigatória." });
+    if (req.file) {
+       // Verifica se a imagem anterior foi fornecida, caso contrário retorna erro.
+       if (!req.body.imagemAnterior) {
+          return res.status(400).json({ "alterarPost: error": "Imagem anterior é obrigatória." });
+       }
     }
     // Cria o novo objeto de post com base nos dados enviados no request.
-    const postAlterado = await objetoPost(req);
+    const postAlterado = await objetoPost(req, id);
     if (postAlterado.falha) {
         // se não for possível criar o objeto, retorna uma informação arnazenada em 'postAlterado.falha'.
         return res.status(400).json({ "alterarPost: error": postAlterado.falha });
@@ -129,7 +166,7 @@ export async function alterarPost(req, res) {
             const imagemAntiga = path.resolve('uploads', `${id}.${extensaoAnterior}`);
             if (fs.existsSync(imagemAntiga)) {
                 fs.unlinkSync(imagemAntiga);
-                console.log(`Imagem antiga ${imagemAntiga} apagada com sucesso.`);
+                console.log(`\nImagem antiga ${imagemAntiga} apagada com sucesso.`);
             }
             // Renomeia e move a nova imagem para a pasta uploads.
             fs.renameSync(req.file.path, imagemAtualizada);
@@ -137,6 +174,7 @@ export async function alterarPost(req, res) {
         // Atualiza os dados do post no banco de dados.
         const postModificado = await postAtualizar(id, postAlterado);
         // Retorna os dados do post modificado.
+        // console.log("postAlterado:alterarPost:",postAlterado);
         res.status(200).json(postAlterado); 
     } catch (erro) {
         // Erro genérico para segurança.
@@ -204,9 +242,9 @@ export async function apagarItemPost(req, res) {
         if (fs.existsSync(imagemAtual)) {
             // Apaga a imagem.
             fs.unlinkSync(imagemAtual); 
-            console.log(`Arquivo ${imagemAtual} apagado com sucesso.`);
+            console.log(`\nArquivo ${imagemAtual} apagado com sucesso.`);
         } else {
-            console.log(`Arquivo ${imagemAtual} não encontrado.`);
+            console.log(`\nArquivo ${imagemAtual} não encontrado.`);
         }
         // Retorna o resultado da operação de apagar o post.
         res.status(200).json(apagarResultado);

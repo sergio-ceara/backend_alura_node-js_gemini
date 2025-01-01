@@ -66,7 +66,7 @@ export default function routes(app) {
     // Rota para apagar todos os posts da coleção
     app.delete("/posts", apagarTodosPosts);
     // Rota para apagar um post específico pelo ID
-    app.delete("/post/:id", apagarItemPost);
+    app.delete("/posts/:id", apagarItemPost);
     // Rota de fallback para qualquer URL não mapeada, redireciona para 'index.html'
     app.get("*", (req, res) => {
         res.sendFile(path.join(publicPath, 'index.html')); 

@@ -18,7 +18,7 @@ const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 export default async function gerarDescricaoComGemini(imageBuffer, solicitacao) {
   // A variável 'prompt' recebe a solicitação que será passada ao modelo.
   const prompt = solicitacao;
-  
+
   try {
     // Cria o objeto de imagem com o conteúdo da imagem convertido para base64 e o tipo MIME.
     const image = {
@@ -30,17 +30,27 @@ export default async function gerarDescricaoComGemini(imageBuffer, solicitacao) 
       },
     };
 
-    // Chama o modelo Gemini para gerar a resposta com base no 'prompt' e na imagem fornecida.
-    const res = await model.generateContent([prompt, image]);
+    try {
+      // Chama o modelo Gemini para gerar a resposta com base no 'prompt' e na imagem fornecida.
+      const res = await model.generateContent([prompt, image]);
 
-    // Retorna o texto gerado pela resposta do modelo. Se não houver texto, retorna uma mensagem padrão.
-    return res.response.text() || "Alt-text não disponível.";
+      // Verifica se a resposta contém um texto gerado
+      if (res && res.response && res.response.text) {
+        return res.response.text();  // Retorna o texto gerado pelo modelo
+      } else {
+        return "Auto descrição indisponível."; // Caso não tenha texto gerado
+      }
+    } catch (e) {
+      // Se ocorrer um erro ao gerar o conteúdo, retorna uma mensagem padrão
+      console.error("\nErro ao gerar conteúdo com Gemini:", e.message);
+      return "Auto descrição indisponível.";
+    }
 
   } catch (erro) {
-    // Se ocorrer um erro durante a geração da descrição, ele será capturado aqui.
-    console.error("Erro ao obter alt-text:", erro.message, erro);
+    // Se ocorrer um erro durante a criação do objeto de imagem ou qualquer outro erro, captura e loga
+    console.error("\nErro ao obter alt-text:", erro.message, erro);
     
-    // Lança um erro customizado para indicar que a descrição não pôde ser gerada.
-    throw new Error("Erro ao obter o alt-text do Gemini.");
+    // Lança um erro customizado para indicar que a descrição não pôde ser gerada
+    throw new Error("\nErro ao obter o alt-text do Gemini.");
   }
 }
